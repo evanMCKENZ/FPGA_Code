@@ -1,0 +1,27 @@
+module EvanMLab1();
+
+reg [9:0] count;
+reg signal1;
+
+always@(*)
+	begin
+		if(signal1 == samevalue)
+		begin
+			assign count = 0;
+		end
+		
+		else
+		begin
+			count = count + 1;
+		end
+	end
+reg [1:0] binarynum;
+reg [1:0] graycodenum;
+
+always@(*)
+	begin
+		graycodenum[1] = binarynum[1];
+		graycodenum[0] = binarynum[1] ^ binarynum[0];
+	end
+endmodule
+		

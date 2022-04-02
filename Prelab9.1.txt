@@ -1,0 +1,142 @@
+//Authors: Evan McKenzie and Patrick McCommons
+//Func: This program utilizes two Nios timers
+//	to keep track of the differences between
+//	the times a button is pressed, maintain a
+//	ongoing count on the seven segment displays
+//	of the seconds between the presses, then 
+//	replace that count with a value representing the
+//	millisecond value of the difference between the
+//	presses after the second button press
+//Last Edited: Nov 11, 2021 8:39p
+#include "alt_types.h"
+#include "altera_avalon_pio_regs.h"
+#include "sys/alt_irq.h"
+#include "system.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <stdint.h>
+
+//change in lab
+#define HEX0BASE 0x000210A0
+#define HEX1BASE 0x00021080
+#define HEX2BASE 0x00021040
+#define HEX3BASE 0x00021060
+#define KEYBASE 0x00210C0
+#define TIMER0BASE 0x0021020
+#define TIMER1BASE 0x0021000
+
+//32 bit pio pointers
+volatile uint32_t* hex0 = (volatile uint32_t*) HEX0BASE;
+volatile uint32_t* hex1 = (volatile uint32_t*) HEX1BASE;
+volatile uint32_t* hex2 = (volatile uint32_t*) HEX2BASE;
+volatile uint32_t* hex3 = (volatile uint32_t*) HEX3BASE;
+volatile uint32_t* KEYBase = (volatile uint32_t*) KEYBASE;
+volatile uint16_t* TimerBase = (volatile uint16_t*) TIMERBASE;
+
+//helper functions for conversion for displays
+int convert(int hx)
+{
+	int returnVal = 0;
+	switch(hx){
+		case 0:
+        	returnVal = 0x40;
+			break;
+		case 1:
+        	returnVal = 0x79;
+			break;
+		case 2:
+    	    	returnVal = 0x24;
+			break;
+		case 3:
+     	    	returnVal = 0x30;
+			break;
+		case 4:
+      	    	returnVal =0x19;
+			break;
+		case 5:
+       	    	returnVal = 0x12;
+			break;
+		case 6:
+       	    	returnVal = 0x02;
+			break;
+		case 7:
+       	    	returnVal = 0x78;
+			break;
+		case 8:
+       	    	returnVal = 0x00;
+			break;
+		case 9:
+            	returnVal = 0x18;
+			break;
+		case 10:
+      	    	returnVal = 0x08;
+			break;
+		case 11:
+      	    	returnVal = 0x03;
+			break;
+		case 12:
+       	    	returnVal = 0x46;
+			break;
+		case 13:
+       	    	returnVal = 0x21;
+			break;
+		case 14:
+            	returnVal = 0x06;
+			break;
+		case 15:
+            	returnVal = 0x0E;
+			break;
+		//display nothing
+		default:
+		    returnVal = 0xFF;
+			break;
+    }
+	return returnVal;
+}
+
+static int count = 0;
+
+static void handle_button_interrupts(void* context)
+{
+	if(count == 0)
+	{
+		TimerBase[2] |= 0x6;
+		count++;
+		return;
+	}
+	if(count == 1)
+	{
+		TimerBase[8] = 0xDEAD;
+		volatile uint32_t snapshot = (Timer1Base[8] & 0xFFFF);
+		snapshot |= (Timer1Base[10] & 0xFFFF) << 16;
+
+		//stop periodic timer
+		TimerBase[2] = 0x4;
+
+		//calculate number of miliseconds elapsed
+		int milliseconds = (0xFFFFFFFF - snapshot)/(50000);
+
+		//update seven seg displays
+		*hex0 = convert((milliseconds & 0xF) / 0x1);
+ 		*hex1 = convert((milliseconds & 0xF0) / 0x10);
+   		*hex2 = convert((milliseconds & 0xF00) / 0x100);
+   		*hex3 = convert((milliseconds & 0xF000) / 0x1000);
+		count++;
+		return;
+	}
+	else
+	{
+		printf("something went wrong somewhere");
+		return;
+	}
+}
+
+int main()
+{
+
+	alt_ic_isr_register(XXX_IRQ_INTERRUPT_CONTROLLER_ID, XXX_IRQ, handle_button_interrupts, NULL, 0x0);
+
+	while(1)
+
+    	return 0;
+}

@@ -1,0 +1,76 @@
+#include <stdio.h>
+
+int main()
+{
+    volatile alt_u32 count = 0x000000;
+    increaseCount(count);
+}
+
+void PrintSevenSegment1(volatile alt_u32 count)
+{
+    
+    alt_u8* hex0 = baseaddress;
+    alt_u8* hex1 = baseaddress+7;
+    alt_u8* hex2 = baseaddress+14;
+    alt_u8* hex3 = baseaddress+21;
+    alt_u8* hex4 = baseaddress+28;
+    alt_u8* hex5 = baseaddress+35;
+
+    unsigned mask1, mask2, mask3, mask4, mask5
+    mask0 = ((1 << 4) - 1) << 0;
+    first4bits = count & mask0;
+
+    mask1 = ((1 << 4) - 1) << 4;
+    sec4bits = count & mask1;
+
+    mask2 = ((1 << 4) - 1) << 8;
+    three4bits = count & mask2;
+
+    mask3 = ((1 << 4) - 1) << 16;
+    four4bits = count & mask3;
+
+    mask4 = ((1 << 4) - 1) << 20;
+    five4bits = count & mask4;
+
+    mask5 = ((1 << 4) - 1) << 24;
+    six4bits = count & mask5;
+
+    *(hex0) = first4bits;
+
+    *(hex1) = sec4bits;
+
+    *(hex2) = three4bits;
+
+    *(hex3) = four4bits;
+
+    *(hex4) = five4bits;
+
+    *(hex5) = six4bits;
+
+    
+}
+
+void PrintSevenSegment2(volatile alt_u32 count)
+{
+    
+    Call to verilog seven seg module?
+}
+
+void increaseCount(volatile alt_u32 count)
+{
+    do
+    {
+        count = count + 1;
+        total = total + 1;
+        PrintSevenSegment(count);
+        
+    }while(total != 16777215);          //integer equivalent of 111111111111111111111111 (0xFFFFFF)
+    
+    zeroCount(count);
+}
+
+void zeroCount(volatile alt_u32 count)
+{
+    count = 0x000000;
+    increaseCount(count);
+}

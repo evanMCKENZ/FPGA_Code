@@ -1,0 +1,142 @@
+//Authors: Evan McKenzie
+//Func: This program utilizes two Nios timers
+//	to keep track of the differences between
+//	the times a button is pressed, maintain a
+//	ongoing count on the seven segment displays
+//	of the seconds between the presses, then 
+//	replace that count with a value representing the
+//	millisecond value of the difference between the
+//	presses after the second button press
+
+#include <stdint.h>
+#include <stdio.h>
+
+void printSevenSegment(volatile uint32_t count){
+
+	  volatile uint32_t* hex0 = 0x00021040;
+	  volatile uint32_t* hex1 = 0x00021000;
+	  volatile uint32_t* hex2 = 0x00021020;
+
+
+	  uint32_t firsthex = count & 0x00F;
+
+	  uint32_t secondhex = (count & 0x0F0) >> 4;
+
+	  uint32_t thirdhex = (count & 0xF00) >> 8;
+
+	  *hex0 = caseStatement(firsthex);
+	  *hex1 = caseStatement(secondhex);
+	  *hex2 = caseStatement(thirdhex);
+
+}
+
+uint32_t caseStatement(uint32_t binary)
+{
+
+	uint32_t sevensegoutput;
+
+	switch(binary) {
+      case 0 :
+      		sevensegoutput = 64;
+      		break;
+      case 1 :
+      		sevensegoutput = 121;
+      		break;
+      case 2 :
+      		sevensegoutput = 36;
+      		break;
+      case 3 :
+      		sevensegoutput = 48;
+      		break;
+      case 4 :
+      		sevensegoutput = 25;
+      		break;
+      case 5 :
+      		sevensegoutput = 18;
+      		break;
+      case 6 :
+      		sevensegoutput = 2;
+      		break;
+      case 7 :
+      		sevensegoutput = 120;
+      		break;
+      case 8 :
+      		sevensegoutput = 0;
+      		break;
+      case 9 :
+      		sevensegoutput = 24;
+      		break;
+      case 10 :
+      		sevensegoutput = 8;
+      		break;
+      case 11 :
+      		sevensegoutput = 3;
+      		break;
+      case 12 :
+      		sevensegoutput = 70;
+      		break;
+      case 13 :
+      		sevensegoutput = 33;
+      		break;
+      case 14 :
+      		sevensegoutput = 6;
+      		break;
+      case 15 :
+      		sevensegoutput = 14;
+      		break;
+
+      default :
+         	sevensegoutput = 127;
+         	break;
+	}
+
+	return sevensegoutput;
+
+
+}
+
+int main()
+{
+	volatile uint32_t * keyBase = (uint32_t *) KEY_BASE;
+ 	volatile uint16_t * TimerBaseOne = (uint32_t *) TIMER_BASE1;
+	volatile uint16_t * TimerBaseTwo = (uint32_t *) TIMER_BASE2;
+
+	while((*keyBase & 0x0001) == 0x00);
+
+	int oneperiodl = 0xF080;
+	int oneperiodh = 0x2FA;
+	*(TimerBaseOne + 4) = oneperiodl;
+ 	*(TimerBaseOne + 6) = oneperiodh;
+
+	*(TimerBaseOne + 2) |= 0x6;
+
+	int twoperiodl = 0xFFFF;
+	int twoperiodh = 0xFFFF;
+	*(TimerBaseTwo + 4) = twoperiodl;
+	*(TimerBaseTwo + 6) = twoperiodh;
+	
+	uint32_t count = 0;
+	
+	while((*keyBase & 0x0001) )
+	{
+		while((*TimerBaseOne & 0x0001) == 0x00)
+		{
+			count++;
+			printSevenSegment(count);
+		}
+	}
+
+	
+	*(TimerBaseTwo + 5) = 0xBEEF;
+	uint32_t snapVal = 0;
+
+	snapVal = *(TimerBaseTwo + 5) & 0x0000FFFF;
+	snapVal = snapValue << 16;
+	snapVal |= (*(TimerBaseTwo + 4) & 0x0000FFFF);
+
+	snapVal = 0xFFFFFFFF - snapVal;			//4,294,967,295
+
+	uint32 milli = (snapVal / 50000000) * 1000;
+	
+	printSevenSegment(milli);
+}

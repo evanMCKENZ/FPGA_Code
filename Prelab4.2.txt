@@ -1,0 +1,63 @@
+//Verilog Counter Example
+module myExample(input [23:0]counter,
+                 output [6:0]HEX0,
+                 output [6:0]HEX1,
+                 output [6:0]HEX2,
+                 output [6:0]HEX3,
+                 output [6:0]HEX4,
+                 output [6:0]HEX5);
+   
+    always@(*)
+    begin
+        sevenseg seg0(
+            .num([3:0]counter),
+            .segment(HEX0)
+        );
+        sevenseg seg1(
+            .num([7:4]counter),
+            .segment(HEX1)
+        );
+        sevenseg seg2(
+            .num([11:8]counter),
+            .segment(HEX2)
+        );
+        sevenseg seg3(
+            .num([15:12]counter),
+            .segment(HEX3)
+        );
+        sevenseg seg4(
+            .num([19:16]counter),
+            .segment(HEX4)
+        );
+        sevenseg seg5(
+            .num([23:20]counter),
+            .segment(HEX5)
+    end
+endmodule
+
+module sevenseg(input [3:0]num,
+                output [6:0]segment);
+    always@(*)
+    begin
+        case (num) 
+            0 : seg = 7'b1000000;
+            1 : seg = 7'b1111001;
+            2 : seg = 7'b0100100;
+            3 : seg = 7'b0110000;
+            4 : seg = 7'b0011001;
+            5 : seg = 7'b0010010;
+            6 : seg = 7'b0000010;
+            7 : seg = 7'b1111000;
+            8 : seg = 7'b1010000;
+            9 : seg = 7'b0011000;
+            10 : seg = 7'b0001000;
+            11 : seg = 7'b0000000;
+            12 : seg = 7'b1000110;
+            13 : seg = 7'b1000000;
+            14 : seg = 7'b0000110;
+	    15 : seg = 7'b1110001;
+
+            default : seg = 7'b1111111; 
+        endcase
+    end
+endmodule

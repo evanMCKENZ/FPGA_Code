@@ -1,0 +1,52 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
+int main()
+{
+    
+    srand(time(NULL));
+    
+    
+    int random_number = rand() % 100 + 1;
+    int guesses = 5;
+    printf("Welcome to the Game! Please guess a number between 1 and 100! \n");
+    
+    int guess;
+    while(1)
+    {
+        scanf("%d", &guess);
+    
+        if(guess < random_number && guesses > 0)
+        {
+            guesses = guesses - 1;
+            if(guesses == 0)
+            {
+                printf("Loser! The correct number was %d \n", random_number);
+                return 0;
+            }
+            else
+            {
+                printf("Too Low! Try Again!  %d Guess(es) Remaining! \n", guesses);
+            }
+        }
+        if(guess > random_number && guesses > 0)
+        {
+            guesses = guesses - 1;
+            if(guesses == 0)
+            {
+                printf("Loser! The correct number was %d \n", random_number);
+                return 0;
+            }
+            else
+            {
+                printf("Too High! Try Again! %d Guess(es) Remaining! \n", guesses);
+            }
+        }
+        if(guess == random_number)
+        {
+            printf("WINNER");
+            return 0;
+        }
+    }
+}

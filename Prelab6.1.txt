@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <stdint.h>
+
+int main()
+{
+    volatile uint_32t* adcBase = (volatile uint_32t*) somevalueBase;
+    
+    uint_32t channelValue = 0;
+    uint_32t channel = 0;
+    
+    while(1)
+    {
+        //sequence of bytes to begin conversion
+        *adc = 0;
+        *adc = 1;
+        *adc = 0;
+        
+        
+        //polling loop for control register
+        while((*adc & 0x01) == 0x00);
+        
+        channelValue = adc[channel + 1];
+        
+        printSevenSegment(channelValue);
+        
+    }
+}
+
+void printSevenSegment(volatile uint_32t count){
+	  
+	  uint_32t* hex0 = hex0BaseAddress;
+	  uint_32t* hex1 = hex1BaseAddress;
+	  uint_32t* hex2 = hex2BaseAddress;
+	  
+	  
+	  uint_32t firsthex = count & 0x00F;
+
+	  uint_32t secondhex = (count & 0x0F0) >> 4;
+
+	  uint_32t thirdhex = (count & 0xF00) >> 8;
+	  
+	  *hex0 = caseStatement(firsthex);
+	  *hex1 = caseStatement(secondhex);
+	  *hex2 = caseStatement(thirdhex);
+
+}
+
+uint_32t caseStatement(uint_32t binary)
+{
+
+	uint_32t sevensegoutput;
+
+	switch(binary) {
+      case 0 :
+      		sevensegoutput = 64;
+      		break;
+      case 1 :
+      		sevensegoutput = 121;
+      		break;
+      case 2 :
+      		sevensegoutput = 36;
+      		break;
+      case 3 :
+      		sevensegoutput = 48;
+      		break;
+      case 4 :
+      		sevensegoutput = 25;
+      		break;
+      case 5 :
+      		sevensegoutput = 18;
+      		break;
+      case 6 :
+      		sevensegoutput = 2;
+      		break;
+      case 7 :
+      		sevensegoutput = 120;
+      		break;
+      case 8 :
+      		sevensegoutput = 0;
+      		break;
+      case 9 :
+      		sevensegoutput = 24;
+      		break;
+      case 10 :
+      		sevensegoutput = 8;
+      		break;
+      case 11 :
+      		sevensegoutput = 3;
+      		break;
+      case 12 :
+      		sevensegoutput = 70;
+      		break;
+      case 13 :
+      		sevensegoutput = 33;
+      		break;
+      case 14 :
+      		sevensegoutput = 6;
+      		break;
+      case 15 :
+      		sevensegoutput = 14;
+      		break;
+
+      default :
+         	sevensegoutput = 127;
+         	break;
+	}
+
+	return sevensegoutput;
+
+
+}

@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//Authors: Evan McKenzie
+// Prog: Blinky-Pure-C-Template.c
+// Func: Given a Nios Timer module in continous run mode w/ a fixed period,
+//       Toggle all 10 DE-SoC LEDs every time the timer rolls over past zero.
+//
+//------------------------------------------------------------------------------
+
+#include <stdio.h>
+#include <stdint.h>
+
+#define LED_BASE 0x10000010       // LED PIO Base address. Value TBD.
+#define TIMER_BASE 0x10002000     // TIMER   Base address. Value TBD.
+
+volatile uint32_t * LEDBase = (uint32_t *) LED_BASE;
+volatile uint16_t * TimerBase = (uint32_t *) TIMER_BASE;
+
+static void handle_button_interrupts(void* context)
+{
+	// Toggle all LEDs
+	*LEDBase = *LEDBase ^ 0xFFF;
+}
+
+int main()
+{
+  // Set all LEDs to OFF
+  *LEDBase = 0x000;	
+
+  *(TimerBase+ 2) |= 0x6;
+
+
+  while (1)
+
+  return 0;
+}

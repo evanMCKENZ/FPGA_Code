@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <stdint.h>
+
+void JTAGStringWrite(volatile uint32_t * UARTBaseAddress, char * stringToPrint)
+{
+    char* ref = stringToPrint;
+    
+    while('\0' != *ref)
+    {
+        while(0 == (*(UARTBaseAddress+1) >> 16))
+        {
+            *UARTBaseAddress = *ref;
+            ref = ref + 1;
+        }
+    }
+}
+
+void JTAGStringRead(volatile uint32_t * UARTBaseAddress, char * returnString)
+{
+    uint32_t flag = 0;
+    uint8_t char;
+    
+    flag = *UARTBaseAddress;
+    while(0x8000 != (flag & 0x8000))
+    {
+        flag = *UARTBaseAddress;
+    }
+    
+    char = (uint8_t)(flag & 0xFF);
+    *returnString = char;
+    
+    while(char != '\n')
+    {
+        while(0x8000 != flag & 0x8000)
+        {
+            flag = *UARTBaseAddress;
+        }
+        char = (uint8_t)(flag & 0xFF);
+        *returnString = char;
+    }
+    
+    
+}
+
+void JTAGStringWrite(volatile uint32_t * UARTBaseAddress, char * stringToPrint)
+{
+    char* ref = stringToPrint;
+    
+    asm volatile(
+        "movia r5, 0(%[UARTBaseAddress])        \n\t"
+        "movia r7, 0(%[stringToPrint])          \n\t"
+        "ldw r6, 0(r7)                          \n\t"
+        "whileloop:                             \n\t"
+        "beq r0, r6, nullterm                   \n\t"
+        "whileloop2:                            \n\t"
+        "ldw r8, 0(r5)                          \n\t"
+        "add r8, r8, 1                          \n\t"
+        "srli r8, r8, 16                        \n\t"
+        "beq r0, r8, whileloop                  \n\t"
+        "stw r6, r5                             \n\t"
+        "add r7, r7, 1                          \n\t"
+        "br whileloop2:                         \n\t"
+        "nullterm:                              \n\t"
+        :[UARTBaseAddress] "+r" (UARTBaseAddress), [stringToPrint] "r" (stringToPrint)
+        :"r5", "JTAG memory address"
+        :"r7", "String memory address"
+        :"r6", "char in string"
+        :"r8", "RVAlid register"
+        );
+    
+    
+}
+
+void JTAGStringRead(volatile uint32_t * UARTBaseAddress, char * returnString)
+{
+    uint32_t flag = 0;
+    uint8_t char;
+    
+    flag = *UARTBaseAddress;
+    asm volatile(
+        "movi r5, 0x8000                                \n\t"
+        "ldw r6, ([%flag])                              \n\t"
+        "and r7, r6, r5                                 \n\t"
+        "loop:                                          \n\t"
+        "bne r5, r7, loop                               \n\t"
+        "stw r6, 0([%UARTBaseAddress])                  \n\t"
+        "br loop                                        \n\t"
+        "andi r11, r5, 0xFF                             \n\t"
+        "movia r9, 0([%returnString])                   \n\t"
+        "stw r11, 0(r9)                                 \n\t"
+        "loop2:                                         \n\t"
+        "add r10, r0, 10                                \n\t"
+        "beq r11, r10, end                              \n\t"
+        "and r7, r6, r5                                 \n\t"
+        "beq r7, r5, end                                \n\t"
+        "stw r6, 0([%UARTBaseAddress])                  \n\t"
+        "andi r11, r5, 0xFF                             \n\t"
+        "stw r11, 0(r9)                                 \n\t"
+        "end:                                           \n\t"
+        :[returnString] "=r" (returnString), [UARTBaseAddress] "+r" (UARTBaseAddress)
+        :"r5", "flag value"
+        :"r6", "JTAG base address"
+        :"r7",
+        :"r9", "address of return string"
+        :"r10", "ASCII value of endline"
+        :"r11", "current char"
+    );
+}

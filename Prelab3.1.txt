@@ -1,0 +1,161 @@
+# ==============================================================================
+# Orig: 2021.09.30 - Evan McKenzie
+# FUNC: This code uses a polling loop to check on the state
+	of the push buttons, and read data from the PIO's of
+	the switches to send to the PIO of the LED's	
+# r4 = Switch base address
+# r5 = value to display on seven segment display
+# r6 = LED base address
+# r7 = Seven Segment Display base address
+# r8 = Key base address
+# r9 = constant 1
+# r10 = size of binary counter holder
+# r11 = first value in forwardsList
+# r12 = address of first byte of last element in backwardsList
+# r13 = current binary byte
+# r14 = int value of current binary byte
+# r15 = sum of binary bytes
+# r16 = temp storage of PIO info
+# RETN: Sum of binary counter
+# ------------------------------------------------------------------------------
+
+.global _start
+_start:
+.text
+
+#-------------------------------------------------------------------------------------------------------------------------------------#
+Constants
+
+movia r4, SW_BASE
+movia r6, LED_BASE
+movia r7, SEVSEG_BASE
+movia r8, KEY_BASE
+
+movi r12, 0			#counter
+movi r10, 8			#size of binary counter
+movi r15, 0			#sum of binary conversion
+
+#-------------------------------------------------------------------------------------------------------------------------------------#
+Main Section
+
+mainLoop:
+ldwio r16, 0(r4)			#read value of switches
+stwio r16, 0(r6)			#write value of switches to LEDs
+
+
+beq 0(edgecapture), 1, keyzeropoint
+beq 1(edgecapture), 1, keyonepoint
+beq 2(edgecapture), 1, keytwopoint
+
+br mainLoop
+
+#-------------------------------------------------------------------------------------------------------------------------------------#
+Key Press Handling
+
+keyzeropoint:
+	mov r12, 0
+	j mainLoop
+	
+keyonepoint:
+	beq r12, 99, rollover
+	add r12, r12, 1
+	j mainLoop
+
+keytwopoint:
+	sub r12 r12, 1
+	j mainLoop
+
+rollover:
+	mov r12, 0
+	j mainLoop
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------#
+Binary Conversion
+
+getByte:
+lb r13, r11			#r11 is where the binary number is stored
+
+addi r12, r12, 1			#increment counter
+subi r13, r13, 48			#subtract 48 from byte value to get int value
+subi r10, r10, 1
+
+beq r13, 0, zero			#check whether the given byte is 0
+beg r13, 1, one				#check whether the given byte is 1
+j convert				#jump to convert tag
+
+zero:
+j getByte
+
+one:
+movi r9, 1
+sll r14, r9, r10		#shift left by counter places
+add r15, r15, r14
+
+j getByte
+
+convert:
+HOW TO DO MODULUS FOR SEPARATE DISPLAYS LOGIC HERE
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------#
+Seven Segment Handling
+
+sevenseg0:
+movi r5, 0
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg1:
+movi r5, 1
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg2:
+movi r5, 2
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg3:
+movi r5, 3
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg4:
+movi r5, 4
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg5:
+movi r5, 5
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg6:
+movi r5, 6
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg7:
+movi r5, 7
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg8:
+movi r5, 8
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+sevenseg0:
+movi r5, 9
+stwio r8, 0(r5)			#write value of binary count to sevenseg
+j mainLoop
+
+#-----------------------------------------------------------------------------------------------------------------------------------#
+
+.data
+.equ LED_BASE, 0xff200000
+.equ PUSH_BASE, 0xff200050
+.equ SW_BASE, 0xff200040
+.equ SEVSEG_BASE, 0xff200020
+.skip 1
